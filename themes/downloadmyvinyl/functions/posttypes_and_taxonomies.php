@@ -35,7 +35,7 @@ function records_register_record_post_type() {
         'menu_position' => null,
         'supports' => array( 'title', 'editor', 'thumbnail', 'custom-fields', 'revisions' ),
         'taxonomies' => array( 'format' ),
-        //'menu_icon' => get_stylesheet_directory_uri() . '/images/admin/record-icon.png'
+        'menu_icon' => get_stylesheet_directory_uri() . '/images/admin/disc.png'
     );  
     
     register_post_type( 'record', $args );
@@ -77,7 +77,7 @@ function codes_register_code_post_type() {
         'menu_position' => null,
         'supports' => array( 'title' ),
         'taxonomies' => array( ),
-        //'menu_icon' => get_stylesheet_directory_uri() . '/images/admin/code-icon.png'
+        'menu_icon' => get_stylesheet_directory_uri() . '/images/admin/document-code.png'
     );
 
     register_post_type( 'code', $args );
