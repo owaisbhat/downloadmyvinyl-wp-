@@ -48,7 +48,19 @@ function umm_help($contextual_help, $screen_id, $screen) {
         $pfields_position_bottom = ' selected="selected"';
     }
     
-    if(empty($umm_settings)) $umm_settings = array('retain_data' => 'yes');
+    $duplicate_check_override = $umm_settings['duplicate_check_override'];
+    switch($duplicate_check_override){
+        case 'yes':
+        $duplicate_check_override_yes = ' selected="selected"';
+        $duplicate_check_override_no = '';
+        break;
+        
+        default:
+        $duplicate_check_override_yes = '';
+        $duplicate_check_override_no = ' selected="selected"';
+    }
+    $bot_field = $umm_settings['bot_field'];
+    if(empty($umm_settings)) $umm_settings = array('retain_data' => 'yes', 'bot_field' => 'umm_forbots');
     $backup_notice = '<div class="umm-warning">' . __('<strong>IMPORTANT:</strong> <ins>Always</ins> backup your data before making changes to your website.', UMM_SLUG) . '</div>';
     $tabs = array(array(
         __('Introduction', UMM_SLUG),
@@ -78,8 +90,19 @@ function umm_help($contextual_help, $screen_id, $screen) {
 </select><br /><span>' . __('Skips step 1 in the single-member meta data editor, and displays the entire list of meta keys and values for the selected member. Otherwise, you will have to select a single key to edit.', UMM_SLUG) . '</span></td>
 </tr>
 <tr>
+	<td><strong>' . __('Duplicate Meta Key Check Override', UMM_SLUG) . '</strong><br />
+        <select size="1" name="duplicate_check_override">
+	<option value="' . __('yes', UMM_SLUG) . '"' . $duplicate_check_override_yes . '>' . __('Yes', UMM_SLUG) . '</option>
+	<option value="' . __('no', UMM_SLUG) . '"' . $duplicate_check_override_no . '>' . __('No', UMM_SLUG) . '</option>
+</select><br /><span>' . __('Select <em>Yes</em> to override the safety feature that prevents existing meta keys from being overwritten while new custom meta keys are introduced.', UMM_SLUG) . '</span></td>
+</tr>
+<tr class="alternate">
 	<td><strong>' . __('Custom Profile Field Section Title', UMM_SLUG) . '</strong><br />
         <input type="text" name="section_title" value="' . $umm_settings['section_title'] . '"><br /><span>' . __('Optional title for the section of custom profile fields, which is visible in the profile editor.', UMM_SLUG) . '</span></td>
+</tr>
+<tr>
+	<td><strong>' . __('Bot Field Name', UMM_SLUG) . '</strong><br />
+        <input type="text" name="bot_field" value="' . $bot_field . '"><br /><span>' . __('Name of the hidden form field used to test for spam-bots.', UMM_SLUG) . '</span></td>
 </tr>
 <tr class="alternate">
 	<td><input data-form="umm_update_settings_form" data-subpage="umm_update_settings" data-wait="' . __('Wait...', UMM_SLUG) . '" class="button-primary umm-update-settings-submit" type="submit" value="' . __('Update Settings', UMM_SLUG) . '">
@@ -239,6 +262,46 @@ function umm_help($contextual_help, $screen_id, $screen) {
     <li><strong>message:</strong> (Required with email_to) A message to send in the email. <strong>\n</strong> = line break. <strong>%s</strong> = contents of the form submission. <strong>Important:</strong> You must add <strong>%s</strong> where you want the form submission results displayed in the message.</li>
 </ul>
     </p>', UMM_SLUG)
+    ),
+    
+    array(
+        __('PHP API', UMM_SLUG),
+        '<h2>' . __('PHP API', UMM_SLUG) . '</h2><p>' . __( 'Below are some PHP methods you can use to test User Meta Manager data.', UMM_SLUG) . '</p>
+        <ul class="umm-methods-list">
+        <li><strong class="umm-method">umm_value_contains($key, $search_for, $exact, $user_id)</strong>
+        <p>' . __('Test if a meta value contains a string.', UMM_SLUG) . '</p>
+        <ul>
+          <li><strong>$key</strong> (' . __('string', UMM_SLUG) . ') ' . __('The meta key to test.', UMM_SLUG) . '</li>
+          <li><strong>$search_for</strong> (' . __('string', UMM_SLUG) . ') ' . __('The string to search for.', UMM_SLUG) . '</li>
+          <li><strong>$exact</strong> (' . __('boolean', UMM_SLUG) . ') ' . __('Optional exact match. Default is case-insensitive.', UMM_SLUG) . '</li>
+          <li><strong>$user_id</strong> (' . __('number', UMM_SLUG) . ') ' . __('Optional user ID. Default is the current user.', UMM_SLUG) . '</li>
+        </ul>
+        <strong>' . __('Example', UMM_SLUG) . ':</strong>
+        <pre>$meta_key_to_search = "my_key";
+$string_to_search_for = "abc";
+$case_sensitive = true;
+if(umm_value_contains($meta_key_to_search, $string_to_search_for, $case_sensitive)){
+    // ' . __('Exact match for abc', UMM_SLUG) . '
+} else {
+    // ' . __('No exact match for abc', UMM_SLUG) . '
+}</pre></li>
+        <li><strong class="umm-method">umm_value_is($key, $search_for, $user_id)</strong>
+        <p>' . __('Test if a meta value is an exact match.', UMM_SLUG) . '</p>
+        <ul>
+          <li><strong>$key</strong> (' . __('string', UMM_SLUG) . ') ' . __('The meta key to test.', UMM_SLUG) . '</li>
+          <li><strong>$search_for</strong> (' . __('string', UMM_SLUG) . ') ' . __('The string to match.', UMM_SLUG) . '</li>
+          <li><strong>$user_id</strong> (' . __('number', UMM_SLUG) . ') ' . __('Optional user ID. Default is the current user.', UMM_SLUG) . '</li>
+        </ul>
+        <strong>' . __('Example', UMM_SLUG) . ':</strong>
+        <pre>$meta_key_to_test = "my_key";
+$string_to_match = "abc";
+if(umm_value_is($meta_key_to_test, $string_to_match)){
+    // ' . __('Exact match for abc', UMM_SLUG) . '
+} else {
+    // ' . __('No exact match for abc', UMM_SLUG) . '
+}</pre></li>
+</ul>
+        '
     ),
     
     array(

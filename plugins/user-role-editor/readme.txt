@@ -2,8 +2,8 @@
 Contributors: shinephp
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=vladimir%40shinephp%2ecom&lc=RU&item_name=ShinePHP%2ecom&item_number=User%20Role%20Editor%20WordPress%20plugin&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Tags: user, role, editor, security, access, permission, capability
-Requires at least: 3.2
-Tested up to: 3.5.1
+Requires at least: 3.5
+Tested up to: 3.5.2
 Stable tag: trunk
 
 User Role Editor WordPress plugin makes the role capabilities changing easy. You can change any standard WordPress user role.
@@ -19,7 +19,14 @@ Capabilities could be assigned on per user basis. Multiple roles could be assign
 You can add new capabilities and remove unnecessary capabilities which could be left from uninstalled plugins.
 Multi-site support is provided.
 
-To read more about 'User Role Editor' visit [this page](http://www.shinephp.com/user-role-editor-wordpress-plugin/) at [shinephp.com](shinephp.com).
+Do you need more functionality with quality support in real time? Do you not like advertisement at User Role Editor pages? 
+Buy [Pro version](htpp://role-editor.com). 
+Pro version is advertisement free. Pro version includes the "Export/Import" module. You can export user roles to the local file and import them then 
+to any WordPress site or other sites of the multi-site WordPress network. More functionality modules will follow for Pro version.
+
+To subscribe for Premium support only visit [role-editor.com](htpp://role-editor.com). Premium support is provided by User Role Editor plugin author Vladimir Garagulya. You will get an answer on your question not once a week or never, but in 24 hours.
+
+To read more about 'User Role Editor' visit [this page](http://www.shinephp.com/user-role-editor-wordpress-plugin/) at [shinephp.com](http://shinephp.com)
 
 Русская версия этой статьи доступна по адресу [ru.shinephp.com](http://ru.shinephp.com/user-role-editor-wordpress-plugin-rus/)
 
@@ -34,8 +41,8 @@ Installation procedure:
 4. Go to the "Users"-"User Role Editor" menu item and change your WordPress standard roles capabilities according to your needs.
 
 == Frequently Asked Questions ==
-- Does it work with WordPress 3.3 in multi-site environment?
-Yes, it works with WordPress 3.3 multi-site. By default plugin works for every blog from your multi-site network as for locally installed blog.
+- Does it work with WordPress in multi-site environment?
+Yes, it works with WordPress multi-site. By default plugin works for every blog from your multi-site network as for locally installed blog.
 To update selected role globally for the Network you should turn on the "Apply to All Sites" checkbox. You should have superadmin privileges to use User Role Editor under WordPress multi-site.
 
 To read full FAQ section visit [this page](http://www.shinephp.com/user-role-editor-wordpress-plugin/#faq) at [shinephp.com](shinephp.com).
@@ -54,28 +61,13 @@ To read more about 'User Role Editor' visit [this page](http://www.shinephp.com/
 * Marcin - For the code enhancement. This contribution allows to not lose new custom capability if it is added to other than 'Administrator' role.
 * [FullThrottle](http://fullthrottledevelopment.com/how-to-hide-the-adminstrator-on-the-wordpress-users-screen) - For the code to hide administrator role at admin backend.
 
-= Translations =
-* Arabic: [Yaser](http://www.englize.com/)
-* Brasilian Portuguese: André Gama, [Onbiz](http://www.onbiz.com.br/), [Rafael Galdencio](http://www.arquiteturailustrada.com.br)
-* Dutch: [Frank Groeneveld](http://ivaldi.nl), [Rémi Bruggeman](http://www.remisan.be)
-* French: [Presse et Multimedia](http://presse-et-multimedia.fr/blog), [Whiler](http://blogs.wittwer.fr/whiler)
-* German: [Peter](http://www.becker-heidmann.de)
-* Hebrew: [Aryo Digital](http://www.aryo.co.il), [Sagive](http://www.sagive.co.il)
-* Hindi: [Outshine Solutions](http://outshinesolutions.com)
-* Italian: [Tristano Ajmone](http://www.zenfactor.org), [Umberto Sartori](http://venezialog.net)
-* Lithuanian: [Vincent G](http://host1free.com)
-* Persian: [Parsa](http://parsa.ws), [Good Life](http://good-life.ir), Amir Khalilnejad
-* Polish: [TagSite](http://www.tagsite.eu), [Bartosz](www.digitalfactory.pl)
-* Russian: [Vladimir Garagulya](http://shinephp.com)
-* Serbian: [Diana](http://wpcouponshop.com)
-* Spanish: [Victor Ricardo Díaz (INFOMED)](http://www.sld.cu)
-* Swedish: [Christer Dahlbacka](www.startlinks.eu), [Andréas Lundgren](http://adevade.com/)
-* Traditional Chinese (Jingxin Lai)
-* Turkish: [Muhammed YILDIRIM](http://ben.muhammed.im)
-* -----------------------------------------------------
-* translations below are included to the package, but all of them are outdated and every file needs to be updated. You are welcome!
-* Finnish, Japanese, Belorussian, Chinese, Hungarian
 
+= Translations =
+* Catalan: [Efraim Bayarri](http://replicantsfactory.com/)
+* Turkish: [Muhammed YILDIRIM](http://ben.muhammed.im)
+*
+*---------------------------------------------------------------
+* The most of translation files except shown above are obsolete and require updates. 
 
 Dear plugin User!
 If you wish to help me with this plugin translation I very appreciate it. Please send your language .po and .mo files to vladimir[at-sign]shinephp.com email. Do not forget include you site link in order I can show it with greetings for the translation help at shinephp.com, plugin settings page and in this readme.txt file.
@@ -84,6 +76,45 @@ Share with me new ideas about plugin further development and link to your site w
 
 
 == Changelog ==
+= 4.1 =
+* 03.07.2013
+* Quick Filter is added. Type part of any capability. All capabilities containing that word, e.g. 'edit' or 'users' will be highlighted by green color. 
+While 'quick filter' is in action 'Select All', 'Unselect All', 'Inverse' buttons work with highlighted capabilities sub-set only. 
+Read [this post](http://role-editor.com/user-role-editor-version-4-1-is-available/) for more information: 
+* Class property and method access modifiers fatal errors were fixed (http://wordpress.org/support/topic/fatalerror-1). 
+
+= 4.0 =
+* 30.06.2013
+* Pro version only: added 'Export/Import' functionality to 'export' all user roles to the local file and 'import' them then to other WordPress blog or other sites of muliti-site WordPress network, or just restore roles to previous state after playing with them with test purpose.
+* Added integration with the Gravity Forms plugin. User Role Editor shows Gravity Forms user capabilities at the custom capabilities section.
+* Code is fully restructured and encapsulated to PHP classes. Internal global variables are not in use anymore.
+
+= 3.14.1 =
+* 24.05.2013
+* Bug, which prevented the correct use of WordPress nonces on some installations (Windows), is fixed;
+* DIRECTORY_SEPARATOR constant used in path to User Role Editor CSS file was empty on some installations (Windows). Constant DIRECTORY_SEPARATOR is excluded from the plugin code;
+* User capabilities page: roles checkboxes are excluded from 'Select All', 'Unselect All', 'Inverse' operations. Only capabilities checkboxes are processed.
+* Turkish [Muhammed YILDIRIM](http://ben.muhammed.im) translation is updated.
+
+= 3.14 =
+* 17.05.2013
+* Interface update: role/capability add/remove stuff was removed from the page. Plugin has toolbar at the right side now. Click on the button opens needed dialog window.
+* New role may have different attrubutes "ID" and "Name". While ID is still restricted by latin characters hyphen, underscore and digits only, Name could contain spaces and national languages characters.
+* General code cleanup and security enhancements: all data changes request are processed via POST instead of GET now. So its more difficult to send modified malicious request without special software. Presence of special nonce field is checked for all requests.
+* Setting up the 'administrator' role as default one for new registered users is prohibited at server side. 
+* JavaScript code separated from PHP one whenever it's possible.
+
+* 14.05.2013
+* Update for administrators of multi-site WordPress installations. Single-site WordPress installation administrator could skip this update. 
+* "Apply to All Sites" feature did not work at version 3.12. It is fixed.
+* "Apply to All Sites" feature is available now from main site of the network only
+
+= 3.12 =
+* 01.05.2013
+* Critical update: persistent cross-site scripting vulnerability is fixed.
+* WordPress built-in constants, like WP_PLUGIN_URL are not used in order to provide compatibility with sites which use SSL. plugin_dir_url(), plugin_dir_path() functions are used to define paths to the plugin's files instead. 
+* "Greetings" section is removed from the plugin's main page. All that content is still available at [plugin page](http://shinephp.com/user-role-editor-wordpress-plugin)
+
 
 = 3.11 =
 * 24.03.2013

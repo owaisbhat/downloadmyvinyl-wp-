@@ -5,8 +5,18 @@ Author: PJ Fancher
 Template: Avada
 */
 
-@import "user-profile.less";
-@import "css/bootstrap.css";
+@import url("css/bootstrap.css");
 @import url("../Avada/style.css");
 
+.avada-row {
+	position: relative;
+	
+	nav#nav {
+		position: absolute;
+		left: 130px;
+	}
+}
 
+
+@import "user-profile.less";
+@import "home.less";

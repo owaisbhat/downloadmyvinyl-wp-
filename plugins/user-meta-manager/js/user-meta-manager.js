@@ -16,6 +16,14 @@
             $("#umm-form").submit();
         }); 
        });
+       
+       $(".pagination-links a").each(function(){
+        var t = $(this).attr('href').split('per_page');
+        if(!t[1]){
+          var h = $(this).attr('href') + '&per_page=' + $("#per-page").val();
+          $(this).attr('href', h);  
+        }        
+       });
     
     $(document).on('click', "a.umm-subpage", function(event){
         event.preventDefault();
@@ -400,7 +408,7 @@
                 dataType: "json"
             });
             request.done(function(data){
-                if(data.key_exists){
+                if(data.key_exists && page_data.duplicate_override != 'yes'){
             if(!$(".key-exists-warning").html()){
                 $("input#umm_update_user_meta_submit").prop("disabled","disabled");
             obj.after('<div class="umm-warning key-exists-warning hidden">' + page_data.key_exists + '</div>');

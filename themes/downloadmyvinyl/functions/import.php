@@ -1,14 +1,15 @@
 <?php 
 
 function import_data() {
-
-	//import_users();
-	//import_records();
-	//import_codes();
+	import_users();
+	import_records();
+	import_codes();
 }
 
 function delete_data() {
+	delete_users();
 	delete_posts();
+	delete_codes();
 }
 
 function import_users() {
@@ -128,35 +129,25 @@ function import_codes() {
 	$log_file = get_stylesheet_directory() . '/logs/' . date( 'c' ) . '-code-import-log.txt';
 	$file_handle = fopen( $log_file, 'w' );
 
-	$result = mysql_query( 'SELECT MAX(id) FROM CODES' );
-	$max = mysql_fetch_row( $result );
-	$max = $max[0];
+	$query = 'SELECT * FROM codes';
+	$result = mysql_query( $query );
 
-	for( $count = 1; $count <= $max; $count++ ) {
-		$args = null;
-
+	while ( $code = mysql_fetch_array( $result ) ) {
 		$db = db_connect('downloadmyvinyl');
-		$query = "SELECT * FROM codes WHERE id = $count";
-		$result = mysql_query( $query );
-		if ( $code = mysql_fetch_array( $result ) ) {
-			$args = array (
-				'post_title' => $code['code'],
-				'post_type' => 'code',
-				'post_date' => $code['created'],
-				'post_status' => 'publish',
-				'record_id' => $code['record_id'],
-				'user_id' => $code['user_id'],
-				'count' => $code['count'],
-				'expired' => $code['expired'],
-				'downloaded' => $code['downloaded'],
-				'old_code_id' => $code['id'],
-			);
-		}
+		$args = array (
+			'code' => $code['code'],
+			'created' => $code['created'],
+			'record_id' => $code['record_id'],
+			'count' => $code['count'],
+			'expired' => $code['expired'],
+			'downloaded' => $code['downloaded'],
+			'old_code_id' => $code['id'],
+		);
 
 		$db = db_connect('downloadmyvinyl-wp');
 
-		$result = mysql_query( "SELECT post_id FROM wp_postmeta WHERE meta_key='old_record_id' AND meta_value = {$code['record_id']}" );
-		$record_id = mysql_fetch_row ( $result );
+		$result_record = mysql_query( "SELECT post_id FROM wp_postmeta WHERE meta_key='old_record_id' AND meta_value = {$code['record_id']}" );
+		$record_id = mysql_fetch_row ( $result_record );
 		$record_id = $record_id[0];
 
 		if ( $args['count'] > 1 ) {
@@ -171,14 +162,9 @@ function import_codes() {
 			$args['post_status'] = 'expired';
 		}
 
-		$code_id = wp_insert_post ( $args );
-		fwrite( $file_handle, "Storing code {$args['old_code_id']}\n" );
-		add_post_meta( $code_id, 'download_count', $args['count'] );
-		add_post_meta( $code_id, 'download_date', $args['downloaded'] );
-		
-		p2p_type( 'record_to_code' )->connect( $record_id, $code_id, array(
-			'date' => current_time('mysql')
-		) );
+		$query =  "INSERT INTO codes ( code, record_id, count, expired, downloaded, created ) VALUES ( '{$args['code']}', '{$args['record_id']}', '{$args['count']}', '{$args['expired']}', '{$args['downloaded']}', '{$args['created']}' ) ";
+		fwrite( $file_handle, "INSERT INTO codes ( code, record_id, count, expired, downloaded, created ) VALUES ( '{$args['code']}', '{$args['record_id']}', '{$args['count']}', '{$args['expired']}', '{$args['downloaded']}', '{$args['created']}' ) \n");
+		mysql_query ( $query );
 	}
 
 	fclose( $file_handle );
@@ -199,6 +185,7 @@ function db_connect($database)   //connects to database
 
 
 function delete_users() {
+	require_once(ABSPATH . 'wp-admin/includes/user.php');
 	$result = mysql_query( 'SELECT user_id FROM wp_usermeta WHERE meta_key="wp_user_level" AND meta_value=2' );
 	while ( $user = mysql_fetch_row( $result ) ) {
 		wp_delete_user( $user[0] );
@@ -208,15 +195,19 @@ function delete_users() {
 function delete_posts() {
 	$args = array (
 		'post_type' => array('record', 'code'),
+		'posts_per_page' => -1,
 	);
 
 	$query = new WP_Query( $args );
-	
+
 	while ( $query->have_posts() ) {
 		$query->the_post();
-		echo '<pre>' . print_r($post, true) . '</pre>';
-		wp_delete_post( $post->ID, true );
+		wp_delete_post( $query->post->ID, true );
 	}
+}
+
+function delete_codes() {
+	mysql_query( 'TRUNCATE TABLE codes' );
 }
 
 ?>

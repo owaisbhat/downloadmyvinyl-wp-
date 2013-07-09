@@ -4,7 +4,7 @@
  * Plugin Name: User Meta Manager
  * Plugin URI: http://websitedev.biz
  * Description: Add, edit, or delete user meta data with this handy plugin. Easily restrict access or insert user meta data into posts or pages.
- * Version: 2.2.4
+ * Version: 2.2.8
  * Author: Jason Lau
  * Author URI: http://jasonlau.biz
  * Text Domain: user-meta-manager
@@ -31,7 +31,7 @@
     exit('Please don\'t access this file directly.');
 }
 
-define('UMM_VERSION', '2.2.4');
+define('UMM_VERSION', '2.2.8');
 define("UMM_PATH", plugin_dir_path(__FILE__) . '/');
 define("UMM_SLUG", "user-meta-manager");
 define("UMM_AJAX", "admin-ajax.php?action=umm_switch_action&amp;umm_sub_action=");
@@ -57,6 +57,23 @@ function umm_add_custom_meta(){
     ';
     print $output;
     exit;
+}
+
+function umm_add_registration_fields(){
+    $content = umm_show_profile_fields(false, false, true);
+    echo $content;
+}
+
+function umm_add_user_fields(){
+    $umm_content = umm_show_profile_fields(false, false, true);
+    $umm_output = '<div id="umm-add-user-fields" style="display:none;">' . $umm_content . '</div>
+    <script type="text/javascript">
+       jQuery(function($){
+	      $("form#createuser p.submit").before($("div#umm-add-user-fields").html());
+	   });
+    </script>
+   ==========';
+   echo $umm_output;
 }
 
 function umm_add_user_meta(){
@@ -310,14 +327,19 @@ function umm_delete_backup_files(){
 }
 
 function umm_default_keys(){
+    // Sets default and posted values for custom meta upon new user registration.
     global $wpdb;
-    $data = umm_usermeta_data("ORDER BY user_id DESC LIMIT 1");
-    $umm_data = umm_get_option('custom_meta');
+    $data = umm_usermeta_data("ORDER BY user_id DESC LIMIT 1"); // Gets the latest user id        
+    $umm_options = umm_get_option();
+    $umm_data = $umm_options['custom_meta'];
+    // Set default values for custom meta
     if($umm_data):
         foreach($umm_data as $key => $value):
             update_user_meta($data[0]->user_id, $key, $value, false);
         endforeach;
     endif;
+    // Set posted values for profile fields
+    umm_update_profile_fields($data[0]->user_id);
 }
 
 function umm_delete_custom_meta(){
@@ -746,7 +768,7 @@ function umm_install(){
    if(!array_key_exists('settings', $original_data)):
       $umm_data['settings'] = get_option('umm_settings');
       if(!is_array($umm_data['settings'])):
-         $umm_data['settings'] = array('retain_data' => 'yes', 'first_run' => 'yes', 'shortcut_editing' => 'no', 'section_title' => '');
+         $umm_data['settings'] = array('retain_data' => 'yes', 'first_run' => 'yes', 'shortcut_editing' => 'no', 'section_title' => '', 'duplicate_check_override' => 'no', 'bot_field' => 'umm_forbots');
      endif;
    else:
       $umm_data['settings'] = $original_data['settings'];
@@ -768,18 +790,7 @@ function umm_install(){
    $umm_data['backup_date'] = date("M d, Y") . ' ' . date("g:i A");
    
    update_option('user_meta_manager_data', $umm_data);
-   umm_backup('php', 'yes', false);
-   // Depreciated options
-   /*
-   delete_option('umm_singles_data');
-   delete_option('umm_users_columns');
-   delete_option('umm_usermeta_columns');
-   delete_option('umm_backup_date');
-   delete_option('umm_backup_files');
-   delete_option('umm_profile_fields');
-   delete_option('umm_settings');
-   delete_option('umm_sort_order');
-   */   
+   umm_backup('php', 'yes', false); 
 }
 
 function umm_key_exists($key=false){
@@ -1079,7 +1090,7 @@ function umm_restore_confirm(){
     exit;
 }
 
-function umm_show_profile_fields($echo=true, $fields=false, $debug=false){
+function umm_show_profile_fields($echo=true, $fields=false, $register=false, $debug=false){
    global $current_user;
    $umm_options = umm_get_option();
    $umm_settings = $umm_options['settings'];
@@ -1116,6 +1127,7 @@ function umm_show_profile_fields($echo=true, $fields=false, $debug=false){
       $default_value = stripslashes(htmlspecialchars_decode($profile_field_settings['value']));
       $the_user = ((isset($_REQUEST['user_id']) && !empty($_REQUEST['user_id'])) && current_user_can('add_users')) ? $_REQUEST['user_id'] : $current_user->ID;
       $value = stripslashes(htmlspecialchars_decode(get_user_meta($the_user, $profile_field_name, true)));
+      if($register) $value = $default_value;
       
       $output .= '<tr>
 	<th><label for="' . $profile_field_name . '" class="' . str_replace(" ", "-", strtolower($profile_field_name)) . '">' . stripslashes(htmlspecialchars_decode($profile_field_settings['label'])) . '</label></th>
@@ -1159,7 +1171,7 @@ function umm_show_profile_fields($echo=true, $fields=false, $debug=false){
             $output .= '" value="' . $profile_field_settings['value'] . '" class="' . stripslashes(htmlspecialchars_decode($profile_field_settings['class'])) . '"';
             if($profile_field_settings['required'] == 'yes')
               $output .= ' required="required"';
-            if($value != "")
+            if($value != "" && !$register)
               $output .= ' checked="checked"';
             if(!empty($profile_field_settings['attrs']))
               $output .= ' ' . stripslashes(htmlspecialchars_decode($profile_field_settings['attrs']));
@@ -1222,18 +1234,22 @@ function umm_show_profile_fields($echo=true, $fields=false, $debug=false){
     endif; // !empty($profile_fields)
     
     if(isset($output) && !empty($output)):
-    $section_title = (!isset($umm_settings['section_title'])) ? '<h3 class="umm-custom-fields"></h3>' : '<h3 class="umm-custom-fields">' . $umm_settings['section_title'] . '</h3>';
-    $output = $section_title . '<table class="form-table umm-custom-fields">
+       if($show_fields):
+          $section_title = '';
+       else:
+          $section_title = (!isset($umm_settings['section_title'])) ? '<h3 class="umm-custom-fields"></h3>' : '<h3 class="umm-custom-fields">' . $umm_settings['section_title'] . '</h3>';
+       endif;
+       $output = $section_title . '<table class="form-table umm-custom-fields">
   <tbody>
 ' . $output . '
   </tbody>
 </table>
 ';
-    if($echo):
-    echo  $output;
-    else:
-    return $output;
-    endif;
+       if($echo):
+          echo  $output;
+       else:
+          return $output;
+       endif;
     endif;   
 }
 
@@ -1407,12 +1423,14 @@ function umm_update_option($key, $value){
     endif;
 }
 
-function umm_update_profile_fields(){
+function umm_update_profile_fields($user_id=false){
     global $current_user;
     $saved_profile_fields = (!umm_get_option('profile_fields')) ? array() : umm_get_option('profile_fields');
     $the_user = ((isset($_REQUEST['user_id']) && !empty($_REQUEST['user_id'])) && current_user_can('add_users')) ? $_REQUEST['user_id'] : $current_user->ID;
-    foreach($saved_profile_fields as $field_name => $field_settings):
-      $field_value = (isset($_REQUEST[$field_name])) ? addslashes(htmlspecialchars(trim($_REQUEST[$field_name]))) : '';       
+    if($user_id) $the_user = $user_id;
+    foreach($saved_profile_fields as $field_name => $field_settings):      
+      $field_value = (isset($_REQUEST[$field_name])) ? addslashes(htmlspecialchars(trim($_REQUEST[$field_name]))) : '';
+      if(!$field_settings['allow_tags']) $field_value = wp_strip_all_tags($field_value);     
       update_user_meta($the_user, $field_name, $field_value);
     endforeach;
 }
@@ -1470,6 +1488,8 @@ function umm_update_user_meta(){
     $meta_key = (!empty($_POST['umm_meta_key'])) ? $_POST['umm_meta_key'] : array();
     $meta_key_exists = false;
     $output = "";
+    $umm_settings = umm_get_option('settings');
+    $duplicate_override = (!isset($umm_settings['duplicate_check_override']) || empty($umm_settings['duplicate_check_override'])) ? 'no' : $umm_settings['duplicate_check_override'];
     $umm_data = umm_get_option('custom_meta'); // Array of custom meta data for all users
     $umm_singles_data = umm_get_option('singles_data'); // Array of custom key names for single users
     $umm_singles_data = (empty($umm_singles_data) || !is_array($umm_singles_data)) ? array() : $umm_singles_data; // Backwards compatibility
@@ -1491,7 +1511,8 @@ function umm_update_user_meta(){
              $meta_key_exists = true;
            endif;              
         endforeach;
-        if($meta_key_exists && $_POST['mode'] == 'add'):
+        if($_REQUEST['mode'] == 'add'):
+        if($meta_key_exists && $duplicate_override == 'no'):
            // Key already exists
            $output = '<span class="umm-error-message">' . __('Error: Meta key already existed. Choose a different name.', UMM_SLUG) . '</span>';
         else: // Key doesn't exist
@@ -1523,6 +1544,7 @@ function umm_update_user_meta(){
            }
            $output = __('Meta data successfully added.', UMM_SLUG);                           
         endif; // !Key exists
+        endif; // $_REQUEST['mode'] == 'add'
         else:
            // No meta key sent
            $output = '<span class="umm-error-message">' . __('Error: No meta key entered.', UMM_SLUG) . '</span>';
@@ -1714,6 +1736,8 @@ function umm_usermeta_shortcode($atts, $content) {
     
     if(isset($atts['fields']) && $current_user->ID != 0 && !empty($atts['fields'])):   
     $umm_data = umm_get_option('custom_meta');
+    $umm_settings = umm_get_option('settings');
+    $bot_field = (empty($umm_settings['bot_field'])) ? 'umm_forbots' : $umm_settings['bot_field'];
     $class = (!empty($atts['class'])) ? $atts['class'] : 'umm-usermeta-update-form';
     $submit = (!empty($atts['submit'])) ? $atts['submit'] : __('Submit', UMM_SLUG);
     $success = (!empty($atts['success'])) ? $atts['success'] : __('Update successful!', UMM_SLUG);
@@ -1725,20 +1749,24 @@ function umm_usermeta_shortcode($atts, $content) {
     $vars = (!empty($atts['vars'])) ? explode('&', htmlspecialchars_decode($atts['vars'])) : array();
     $content = '<form action="#" method="post" class="' . $class .  '">';
     $show_fields = (!empty($atts['fields'])) ?  explode(",", str_replace(", ", ",", $atts['fields'])) : array();
-    $umm_user = md5($_SERVER["REMOTE_ADDR"].$_SERVER["HTTP_USER_AGENT"]);
+    $umm_user = md5($_POST["REMOTE_ADDR"].$_SERVER["HTTP_USER_AGENT"]);
     
-    if((isset($_POST['umm_update_usermeta']) && isset($_POST['umm_nonce'])) && $_POST['umm_forbots'] == ''):
+    if((isset($_POST['umm_update_usermeta']) && isset($_POST['umm_nonce'])) && $_POST[$bot_field] == ''):
     if(wp_verify_nonce($_POST['umm_nonce'], 'umm_wp_nonce') && $umm_user == $_POST['umm_update_usermeta']):
     
     $output = "";
-      foreach($show_fields as $field => $field_name):
-        if(isset($_POST[$field_name]) && array_key_exists($field_name, $umm_data)):
-        $posted_value = addslashes(htmlspecialchars(trim($_POST[$field_name])));
-        $val = (is_numeric($posted_value)) ? sprintf("%d", $posted_value) : sprintf("%s", $posted_value);
-        $output .= $field_name . " = " . $val . "\n";
-        update_user_meta($current_user->ID, $field_name, $val);       
-        endif;
-      endforeach;
+    foreach($show_fields as $field => $field_name):
+       if(array_key_exists($field_name, $umm_data)):
+          $posted_value = addslashes(htmlspecialchars(trim($_POST[$field_name])));
+          if($posted_value != ""):
+             $val = (is_numeric($posted_value)) ? sprintf("%d", $posted_value) : sprintf("%s", $posted_value);
+          else:
+             $val = "";
+          endif;
+          $output .= $field_name . " = " . $val . "\n";
+          update_user_meta($current_user->ID, $field_name, $val);
+       endif;
+    endforeach;
       if($email_to):
         $email_message = sprintf($message, $output);
         mail($email_to, $subject, $email_message, "From: " . $email_from . "\n" . "X-Mailer: PHP/" . phpversion());
@@ -1758,7 +1786,7 @@ function umm_usermeta_shortcode($atts, $content) {
       $content .=  '<input type="hidden" name="' . $v[0] . '" value="' . $v[1] . '" />' . "\n";  
     endforeach;
     $content .=  '<input type="hidden" name="umm_update_usermeta" value="' . $umm_user . '" />
-    <input type="hidden" name="umm_forbots" value="" /></form>' . "\n";
+    <input type="hidden" name="' . $bot_field . '" value="" /></form>' . "\n";
     endif;
     
     return $content; 
@@ -1792,9 +1820,45 @@ function umm_users_keys_menu($select=true, $optgroup=false, $include_used=false)
     return $output; 
 }
 
+function umm_value_contains($key, $search_for, $exact=false, $user_id=false){
+    global $current_user;
+    $uid = (!$user_id) ? $current_user->ID : $user_id;
+    $m = get_usermeta($uid, $key);
+    if($exact):
+       $pos = strpos($m, $search_for);
+    else:
+       $pos = stripos($m, $search_for);
+    endif;  
+    if($pos === false):
+       return false;
+    else:
+       return true;
+    endif;
+}
+
+function umm_value_is($key, $search_for, $user_id=false){
+    global $current_user;
+    $uid = (!$user_id) ? $current_user->ID : $user_id;
+    $m = get_usermeta($uid, $key);
+    if($m == $search_for):
+       return true;
+    else:
+       return false;
+    endif;
+}
+
+// Append profile fields to the admin 'Add New User' form. 
+$umm_x = explode("user-new.", $_SERVER["REQUEST_URI"]);
+if($umm_x[1] == 'php'):
+   // No known action for this, so we'll use JavaScript to inject the profile fields in the form.
+   add_action('in_admin_footer', 'umm_add_user_fields');
+endif;
+
 add_action('admin_menu', 'umm_admin_menu');
 add_action('admin_init', 'umm_admin_init');
 add_action('user_register', 'umm_default_keys');
+add_action('createuser', 'umm_default_keys');
+add_action('register_form', 'umm_add_registration_fields');
 
 if(isset($_REQUEST['user_id'])):
   add_action('edit_user_profile', 'umm_show_profile_fields');

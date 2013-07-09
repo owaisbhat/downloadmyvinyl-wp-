@@ -36,7 +36,7 @@ class WPSEO_Admin_Pages {
 	 * Make sure the needed scripts are loaded for admin pages
 	 */
 	function init() {
-		if ( isset( $_GET['wpseo_reset_defaults'] ) ) {
+		if ( isset( $_GET['wpseo_reset_defaults'] ) && wp_verify_nonce( $_GET['nonce'], 'wpseo_reset_defaults' ) && current_user_can( 'manage_options' ) ) {
 			$this->reset_defaults();
 			wp_redirect( admin_url( 'admin.php?page=wpseo_dashboard' ) );
 		}
@@ -105,6 +105,13 @@ class WPSEO_Admin_Pages {
 				'url' => 'http://yoast.com/wordpress/video-manual-wordpress-seo/#utm_source=wordpress-seo-config&utm_medium=banner&utm_campaign=video-manual-banner',
 				'img' => 'banner-video-seo-manual.png',
 				'alt' => 'Banner WordPress SEO Video manual',
+			);
+		}
+		if ( !defined( 'WPSEO_LOCAL_VERSION' ) ) {
+			$banners[] = array(
+				'url' => 'http://yoast.com/wordpress/local-seo/#utm_source=wordpress-seo-config&utm_medium=banner&utm_campaign=local-seo-banner',
+				'img' => 'banner-local-seo.png',
+				'alt' => 'Banner Local SEO plugin',
 			);
 		}
 		shuffle( $banners );
@@ -261,6 +268,9 @@ class WPSEO_Admin_Pages {
 			wp_enqueue_style( 'global' );
 			wp_enqueue_style( 'wp-admin' );
 			wp_enqueue_style( 'yoast-admin-css', WPSEO_URL . 'css/yst_plugin_tools.css', WPSEO_VERSION );
+
+			if ( is_rtl() )
+				wp_enqueue_style( 'wpseo-rtl', WPSEO_URL . 'css/wpseo-rtl.css', WPSEO_VERSION );
 		}
 	}
 
@@ -269,6 +279,7 @@ class WPSEO_Admin_Pages {
 	 */
 	function config_page_scripts() {
 		global $pagenow;
+		
 		if ( $pagenow == 'admin.php' && isset( $_GET['page'] ) && in_array( $_GET['page'], $this->adminpages ) ) {
 			wp_enqueue_script( 'wpseo-admin-script', WPSEO_URL . 'js/wp-seo-admin.js', array( 'jquery' ), WPSEO_VERSION, true );
 			wp_enqueue_script( 'postbox' );

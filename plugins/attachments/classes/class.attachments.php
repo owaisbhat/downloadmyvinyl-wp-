@@ -14,7 +14,7 @@
 if( !defined( 'ABSPATH' ) ) exit;
 
 // Declare our class
-if ( !class_exists( 'Attachments' ) ) :
+if( !class_exists( 'Attachments' ) ) :
 
     /**
      * Main Attachments Class
@@ -22,8 +22,8 @@ if ( !class_exists( 'Attachments' ) ) :
      * @since 3.0
      */
 
-    class Attachments {
-
+    class Attachments
+    {
         private $version;                   // stores Attachments' version number
         private $url;                       // stores Attachments' URL
         private $dir;                       // stores Attachments' directory
@@ -32,13 +32,10 @@ if ( !class_exists( 'Attachments' ) ) :
         private $fields;                    // stores all registered field types
         private $attachments;               // stores all of the Attachments for the given instance
 
-        private $legacy             = false;            // whether or not there is legacy Attachments data
-        private $legacy_pro         = false;            // whether or not there is legacy Attachment Pro data
-        private $image_sizes        = array( 'full' );  // store all registered image sizes
-        private $default_instance   = true;             // use the default instance?
-        private $attachments_ref    = -1;               // flags where a get() loop last did it's thing
-        private $meta_key           = 'attachments';    // our meta key
-        private $valid_filetypes    = array(            // what WordPress considers to be valid file types
+        private $image_sizes        = array( 'full' );      // store all registered image sizes
+        private $attachments_ref    = -1;                   // flags where a get() loop last did it's thing
+        private $meta_key           = 'attachments';        // our meta key
+        private $valid_filetypes    = array(                // what WordPress considers to be valid file types
                     'image',
                     'video',
                     'text',
@@ -58,27 +55,37 @@ if ( !class_exists( 'Attachments' ) ) :
             global $_wp_additional_image_sizes;
 
             // establish our environment variables
-
-            $this->version  = '3.4';
+            $this->version  = '3.5.1.1';
             $this->url      = ATTACHMENTS_URL;
             $this->dir      = ATTACHMENTS_DIR;
+            $plugin         = 'attachments/index.php';
 
             // includes
             include_once( ATTACHMENTS_DIR . 'upgrade.php' );
+            include_once( ATTACHMENTS_DIR . '/classes/class.attachments.legacy.php' );
+            include_once( ATTACHMENTS_DIR . '/classes/class.attachments.search.php' );
             include_once( ATTACHMENTS_DIR . '/classes/class.field.php' );
 
             // include our fields
             $this->fields = $this->get_field_types();
 
-            // deal with our legacy issues if the user hasn't dismissed or migrated already
-            $this->check_for_legacy_data();
-
             // set our image sizes
             $this->image_sizes = array_merge( $this->image_sizes, get_intermediate_image_sizes() );
 
+            // add 'Extend' link
+            add_filter( "plugin_action_links_$plugin",  array( $this, 'plugin_settings_link' ) );
+
+            // add update message(s)
+            add_action( 'in_plugin_update_message-attachments/index.php', array( $this, 'update_message' ) );
+
+            // set up l10n
+            add_action( 'plugins_loaded',               array( $this, 'l10n' ) );
+
+            // load extensions
+            add_action( 'plugins_loaded',               array( $this, 'load_extensions' ) );
+
             // hook into WP
             add_action( 'admin_enqueue_scripts',        array( $this, 'assets' ), 999, 1 );
-            add_action( 'admin_enqueue_scripts',        array( $this, 'admin_pointer' ), 999 );
 
             // register our user-defined instances
             add_action( 'init',                         array( $this, 'setup_instances' ) );
@@ -94,16 +101,15 @@ if ( !class_exists( 'Attachments' ) ) :
             if( !( defined( 'ATTACHMENTS_SETTINGS_SCREEN' ) && ATTACHMENTS_SETTINGS_SCREEN === false ) )
                 add_action( 'admin_menu',               array( $this, 'admin_page' ) );
 
-            // with version 3 we'll be giving at least one admin notice
-            add_action( 'admin_notices',                array( $this, 'admin_notice' ) );
-
             add_action( 'admin_head',                   array( $this, 'field_inits' ) );
             add_action( 'admin_print_footer_scripts',   array( $this, 'field_assets' ) );
+
+            add_action( 'admin_init',                   array( $this, 'admin_init' ) );
 
             // execution of actions varies depending on whether we're in the admin or not and an instance was passed
             if( is_admin() )
             {
-                add_action( 'after_setup_theme', array( $this, 'apply_init_filters' ) );
+                add_action( 'after_setup_theme', array( $this, 'apply_init_filters' ), 999 );
                 $this->attachments = $this->get_attachments( $instance, $post_id );
             }
             elseif( !is_null( $instance ) )
@@ -112,6 +118,170 @@ if ( !class_exists( 'Attachments' ) ) :
                 $this->attachments = $this->get_attachments( $instance, $post_id );
             }
 
+        }
+
+
+
+        /**
+         * Add notification about available Attachments extensions
+         */
+        function update_message()
+        { ?>
+            <div style="margin-top:10px;padding-top:8px;border-top:1px solid #eaeaea;"><span style="color:#f00;"><?php _e( 'Attachments Extensions Available!', 'attachments' ); ?></span> <span style="font-weight:normal;"><?php _e( 'These utilities make working with Attachments even easier!', 'attachments' ); ?></span></div>
+            <div style="font-weight:normal;padding-top:8px;">
+                <p><strong><a href="https://mondaybynoon.com/members/plugins/attachments-ui/?utm_campaign=Attachments&utm_term=Upgrade%2bNotice">Attachments UI</a></strong> - <?php _e( 'Create Attachments Instances with an easy-to-use UI, easily limit meta box locations with fine grained control (e.g. Home page only), and more.', 'attachments' ); ?></p>
+            </div>
+        <?php }
+
+
+
+        /**
+         * Customize the links on the Plugins list page
+         *
+         * @param $links
+         * @return mixed
+         */
+        function plugin_settings_link( $links )
+        {
+            $settings_link = '<a href="options-general.php?page=attachments">'. __( 'Settings', 'attachments' ) . '</a>';
+            array_unshift( $links, $settings_link );
+            $extend_link = '<a href="https://mondaybynoon.com/members/plugins/?utm_campaign=Attachments&utm_term=Plugins%2bExtend#attachments">'. __( 'Extend', 'attachments' ) . '</a>';
+            array_unshift( $links, $extend_link );
+            return $links;
+        }
+
+
+
+        /**
+         * Callback for WordPress' admin_init action
+         *
+         * @since 3.4.3
+         */
+        function admin_init()
+        {
+            if( current_user_can( 'delete_posts' ) )
+                add_action( 'delete_post', array( $this, 'handle_wp_post_delete' ), 10 );
+        }
+
+
+
+        /**
+         * Getter for the existing fields
+         *
+         * @return array
+         * @since 3.5
+         */
+        function get_fields()
+        {
+            return $this->fields;
+        }
+
+
+
+        /**
+         * Callback for WordPress' delete_post action. Searches all saved Attachments
+         * data for any records using a deleted attachment. If found, the record is removed.
+         *
+         * @param int $pid Post ID
+         * @since 3.4.3
+         */
+        function handle_wp_post_delete( $pid )
+        {
+            // check to make sure it was an attachment
+            if( 'attachment' != get_post_type( $pid ) )
+                return;
+
+            // if a user deletes an attachment from the Media library (but it's been used
+            // in Attachments somewhere else) we need to clean that up...
+
+            // we hook into delete_post because the only other option is to filter
+            // each Attachment when retrieving Attachments via get_attachments()
+            // which could potentially be a ton of database calls
+
+            // so we're going to use the search class to find all instances
+            // for any occurrence of the deleted attachment (which has an ID of $pid)
+
+            if( is_array( $this->instances ) )
+            {
+                foreach( $this->instances as $instance => $details )
+                {
+                    $search_args = array(
+                      'instance'      => $instance,
+                      'attachment_id' => intval( $pid ),
+                    );
+
+                    $this->search( null, $search_args );
+
+                    if( $this->exist() )
+                    {
+                        // we've got a hit (e.g. an existing post uses the deleted attachment)
+                        while( $attachment = $this->get() )
+                        {
+                            $post_id = $attachment->post_id;
+
+                            // we'll use the post ID to snag the details
+                            $post_attachments = $this->get_attachments_metadata( $post_id );
+
+                            if( is_object( $post_attachments ) )
+                            {
+                                foreach( $post_attachments as $existing_instance => $existing_instance_attachments )
+                                    foreach( $existing_instance_attachments as $existing_instance_attachment_key => $existing_instance_attachment )
+                                        if( $pid == intval( $existing_instance_attachment->id ) )
+                                            unset( $post_attachments->{$existing_instance}[$existing_instance_attachment_key] );
+
+                                // saving routine assumes array from POST so we'll typecast it
+                                $post_attachments = (array) $post_attachments;
+
+                                // save the revised Attachments metadata
+                                $this->save_metadata( $post_id, $post_attachments );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        /**
+         * Getter for the current meta_key
+         *
+         * @since 3.4.2
+         */
+        function get_meta_key()
+        {
+            return $this->meta_key;
+        }
+
+
+
+        /**
+         * Getter for our URL
+         *
+         * @since 3.5
+         */
+        function get_url()
+        {
+            return $this->url;
+        }
+
+
+
+        /**
+         * Register our textdomain for l10n
+         *
+         * @since 3.4.2
+         */
+        function l10n()
+        {
+            load_plugin_textdomain( 'attachments', false, trailingslashit( ATTACHMENTS_DIR ) . 'languages' );
+        }
+
+
+
+        function load_extensions()
+        {
+            do_action( 'attachments_extension', $this );
         }
 
 
@@ -130,197 +300,14 @@ if ( !class_exists( 'Attachments' ) ) :
 
 
         /**
-         * Stores whether or not this environment has active legacy Attachments/Pro data
-         *
-         * @since 3.1.3
-         */
-        function check_for_legacy_data()
-        {
-            // we'll get a warning issued if fired when Network Activated
-            // since it's supremely unlikely we'd have legacy data at this point, we're going to short circuit
-            if( is_multisite() )
-            {
-                $plugins = get_site_option( 'active_sitewide_plugins' );
-                if ( isset($plugins['attachments/index.php']) )
-                    return;
-            }
-
-            // deal with our legacy issues if the user hasn't dismissed or migrated already
-            if( false == get_option( 'attachments_migrated' ) && false == get_option( 'attachments_ignore_migration' ) )
-            {
-                $legacy_attachments_settings = get_option( 'attachments_settings' );
-
-                if( $legacy_attachments_settings && is_array( $legacy_attachments_settings['post_types'] ) && count( $legacy_attachments_settings['post_types'] ) )
-                {
-                    // we have legacy settings, so we're going to use the post types
-                    // that Attachments is currently utilizing
-
-                    // the keys are the actual CPT names, so we need those
-                    foreach( $legacy_attachments_settings['post_types'] as $post_type => $value )
-                        if( $value )
-                            $post_types[] = $post_type;
-
-                    // set up our WP_Query args to grab anything with legacy data
-                    $args = array(
-                            'post_type'         => isset( $post_types ) ? $post_types : array( 'post', 'page' ),
-                            'post_status'       => 'any',
-                            'posts_per_page'    => 1,
-                            'meta_key'          => '_attachments',
-                            'suppress_filters'  => true,
-                        );
-
-                    $legacy         = new WP_Query( $args );
-                    $this->legacy   = empty( $legacy->found_posts ) ? false : true;
-                }
-            }
-
-            // deal with our legacy Pro issues if the user hasn't dismissed or migrated already
-            if( false == get_option( 'attachments_pro_migrated' ) && false == get_option( 'attachments_pro_ignore_migration' ) )
-            {
-                $post_types = get_post_types();
-
-                // set up our WP_Query args to grab anything (really anything) with legacy data
-                $args = array(
-                        'post_type'         => !empty( $post_types ) ? $post_types : array( 'post', 'page' ),
-                        'post_status'       => 'any',
-                        'posts_per_page'    => 1,
-                        'meta_key'          => '_attachments_pro',
-                        'suppress_filters'  => true,
-                    );
-
-                $legacy_pro         = new WP_Query( $args );
-                $this->legacy_pro   = empty( $legacy_pro->found_posts ) ? false : true;
-            }
-        }
-
-
-
-        /**
          * Facilitates searching for Attachments
          *
          * @since 3.3
          */
         function search( $query = null, $params = array() )
         {
-            $defaults = array(
-                    'attachment_id' => null,            // not searching for a single attachment ID
-                    'instance'      => 'attachments',   // default instance
-                    'post_type'     => null,            // search 'any' post type
-                    'post_id'       => null,            // searching all posts
-                    'post_status'   => 'publish',       // search only published posts
-                    'fields'        => null,            // search all fields
-                );
-
-            $query  = is_null( $query ) ? null : sanitize_text_field( $query );
-            $params = array_merge( $defaults, $params );
-
-            // sanitize parameters
-            $params['attachment_id']    = is_null( $params['attachment_id'] ) ? null : intval( $params['attachment_id'] );
-            $params['instance']         = !is_string( $params['instance'] ) ? 'attachments' : sanitize_text_field( $params['instance'] );
-            $params['post_type']        = is_null( $params['post_type'] ) ? 'any' : sanitize_text_field( $params['post_type'] );
-            $params['post_id']          = is_null( $params['post_id'] ) ? null : intval( $params['post_id'] );
-
-            $params['post_status']      = sanitize_text_field( $params['post_status'] );
-
-            if( is_string( $params['fields'] ) )
-                $params['fields']       = array( $params['fields'] );   // we always want an array
-
-            // since we have an array for our fields, we need to loop through and sanitize
-            for( $i = 0; $i < count( $params['fields'] ); $i++ )
-                $params['fields'][$i] = sanitize_text_field( $params['fields'][$i] );
-
-            // prepare our search args
-            $args = array(
-                    'nopaging'      => true,
-                    'post_status'   => $params['post_status'],
-                    'meta_query'    => array(
-                            array(
-                                    'key'       => 'attachments',
-                                    'value'     => $query,
-                                    'compare'   => 'LIKE'
-                                )
-                        ),
-                );
-
-            // append any applicable parameters that got passed to the original method call
-            if( $params['post_type'] )
-                $args['post_type'] = $params['post_type'];
-
-            if( $params['post_id'] )
-                $args['post__in'] = array( $params['post_id'] );    // avoid using 'p' or 'page_id'
-
-            // we haven't utilized all parameters yet because they're meta-value based so we need to
-            // do some parsing on our end to validate the returned results
-
-            $possible_posts         = new WP_Query( $args );
-            $potential_attachments  = false;  // stores valid attachments as restrictions are added
-
-            if( $possible_posts->found_posts )
-            {
-                // we have results from the reliminary search, we need to quantify them
-                while( $possible_posts->have_posts() )
-                {
-                    $possible_posts->next_post();
-                    $possible_post_ids[] = $possible_posts->post->ID;
-                }
-
-                // now that we have our possible post IDs we can grab all Attachments for all of those posts
-                foreach( $possible_post_ids as $possible_post_id )
-                {
-                    $possible_attachments = $this->get_attachments( $params['instance'], $possible_post_id );
-
-                    foreach( $possible_attachments as $possible_attachment )
-                        $potential_attachments[] = $possible_attachment;
-                }
-
-            }
-
-            // if there aren't even any potential attachments, we'll just short circuit
-            if( !$potential_attachments )
-                return;
-
-            // first we need to make sure that our query matches each attachment
-            // we need to do this because the LIKE query returned the entire meta record,
-            // not necessarily tied to any specific Attachment
-            $total_potentials = count( $potential_attachments );
-            for( $i = 0; $i < $total_potentials; $i++ )
-            {
-                $valid = false;
-
-                // if we need to limit our search to specific fields, we'll do that here
-                if( $params['fields'] )
-                {
-                    // we only want to check certain fields
-                    foreach( $params['fields'] as $field )
-                        if( isset( $potential_attachments[$i]->fields->$field ) )   // does the field exist?
-                            if( strpos( strtolower( $potential_attachments[$i]->fields->$field ),
-                                        strtolower( $query ) ) !== false ) // does the value match?
-                                $valid = true;
-                }
-                else
-                {
-                    // we want to check all fields
-                    foreach( $potential_attachments[$i]->fields as $field_name => $field_value )
-                        if( strpos( strtolower( $field_value) , strtolower( $query ) ) !== false )
-                            $valid = true;
-                }
-
-                if( !$valid )
-                    unset( $potential_attachments[$i] );
-
-                // now our potentials have been limited to each match the query based on any field
-            }
-
-            // limit to attachment ID if applicable
-            if( $params['attachment_id'] )
-            {
-                $total_potentials = count( $potential_attachments );
-                for( $i = 0; $i < $total_potentials; $i++ )
-                    if( $potential_attachments[$i]->id != $params['attachment_id'] )
-                        unset( $potential_attachments[$i] );
-            }
-
-            $this->attachments = array_values( $potential_attachments );
+            $results            = new AttachmentsSearch( $query, $params );
+            $this->attachments  = $results->results;
         }
 
 
@@ -392,9 +379,7 @@ if ( !class_exists( 'Attachments' ) ) :
                 $this->attachments[$index]->meta = wp_get_attachment_metadata( $this->attachments[$index]->id );
 
             // is it an image?
-            if(
-                isset( $this->attachments[$index]->meta['sizes'] ) &&  // is it an image?
-                in_array( $size, $this->image_sizes ) )                                // do we have the right size?
+            if( isset( $this->attachments[$index]->meta['sizes'] ) )
             {
                 $asset = wp_get_attachment_image_src( $this->attachments[$index]->id, $size );
             }
@@ -418,7 +403,24 @@ if ( !class_exists( 'Attachments' ) ) :
         {
             $index = is_null( $index ) ? $this->attachments_ref : intval( $index );
             $asset = wp_get_attachment_image_src( $this->attachments[$index]->id, null, true );
+
             return $asset;
+        }
+
+
+
+        /**
+         * Returns the date for the current Attachment
+         * @author Hasin Hayder
+         *
+         * @since 3.4.1
+         */
+        function date( $d = "d/m/Y", $index = null )
+        {
+            $index  = is_null( $index ) ? $this->attachments_ref : intval( $index );
+            $date   = get_the_time( $d, $this->attachments[$index]->id );
+
+            return $date;
         }
 
 
@@ -459,26 +461,52 @@ if ( !class_exists( 'Attachments' ) ) :
 
 
         /**
+         * Returns the width of the current Attachment if it's an image
+         *
+         * @since 3.5
+         */
+        function width( $size = 'thumbnail', $index = null )
+        {
+            $asset = $this->asset( $size, $index );
+            return $asset[1];
+        }
+
+
+
+        /**
+         * Returns the height of the current Attachment if it's an image
+         *
+         * @since 3.5
+         */
+        function height( $size = 'thumbnail', $index = null )
+        {
+            $asset = $this->asset( $size, $index );
+            return $asset[2];
+        }
+
+
+
+        /**
          * Returns the formatted filesize of the current Attachment
          *
          * @since 3.0
          */
-        function filesize( $index = null )
+        function filesize( $index = null, $size = null )
         {
             $index = is_null( $index ) ? $this->attachments_ref : intval( $index );
 
             if( !isset( $this->attachments[$index]->id ) )
                 return false;
 
-            $url        = wp_get_attachment_url( $this->attachments[$index]->id );
+            // if an image size is passed along, use that
+            $url        = is_string( $size ) ? $this->src( $size, $index ) : wp_get_attachment_url( $this->attachments[$index]->id );
             $uploads    = wp_upload_dir();
             $file_path  = str_replace( $uploads['baseurl'], $uploads['basedir'], $url );
 
             $formatted = '0 bytes';
             if( file_exists( $file_path ) )
-            {
                 $formatted = size_format( @filesize( $file_path ) );
-            }
+
             return $formatted;
         }
 
@@ -496,7 +524,20 @@ if ( !class_exists( 'Attachments' ) ) :
             if( !isset( $this->attachments[$index]->id ) )
                 return false;
 
-            $attachment_mime = explode( '/', get_post_mime_type( $this->attachments[$index]->id ) );
+            $attachment_mime = $this->get_mime_type( $this->attachments[$index]->id );
+            return $attachment_mime;
+        }
+
+
+
+        /**
+         * Retrieves the mime type for a WordPress $post ID
+         *
+         * @since 3.4.2
+         */
+        function get_mime_type( $id = null )
+        {
+            $attachment_mime = explode( '/', get_post_mime_type( intval( $id ) ) );
             return isset( $attachment_mime[0] ) ? $attachment_mime[0] : false;
         }
 
@@ -633,13 +674,29 @@ if ( !class_exists( 'Attachments' ) ) :
             {
                 foreach( $this->instances_for_post_type as $instance )
                 {
+                    // facilitate more fine-grained meta box positioning than post type
+                    $applicable         = apply_filters( "attachments_location_{$instance}", true, $instance );
+
+                    // obtain other details about instance
                     $instance_name      = $instance;
                     $instance           = (object) $this->instances[$instance];
                     $instance->name     = $instance_name;
                     $position           = isset($instance->position) ? $instance->position : 'normal';
                     $priority           = isset($instance->priority) ? $instance->priority : 'high';
 
-                    add_meta_box( 'attachments-' . $instance_name, __( esc_attr( $instance->label ) ), array( $this, 'meta_box_markup' ), $this->get_post_type(), $position, $priority, array( 'instance' => $instance, 'setup_nonce' => !$nonce_sent ) );
+                    if( $applicable )
+                        add_meta_box(
+                            'attachments-' . $instance_name,
+                            __( esc_attr( $instance->label ) ),
+                            array( $this, 'meta_box_markup' ),
+                            $this->get_post_type(),
+                            $position,
+                            $priority,
+                            array(
+                                'instance'      => $instance,
+                                'setup_nonce'   => !$nonce_sent
+                            )
+                        );
 
                     $nonce_sent = true;
                 }
@@ -697,12 +754,21 @@ if ( !class_exists( 'Attachments' ) ) :
                         title        = '<?php echo __( esc_attr( $instance->label ) ); ?>',
                         button       = '<?php echo __( esc_attr( $instance->modal_text ) ); ?>',
                         router       = '<?php echo __( esc_attr( $instance->router ) ); ?>',
-                        attachmentsframe;
+                        limit        = <?php echo intval( $instance->limit ); ?>,
+                        existing     = <?php echo ( isset( $instance->attachments ) && !empty( $instance->attachments ) ) ? count( $instance->attachments ): 0; ?>,
+                        attachmentsframe,
+                        editframe;
 
                     $element.on( 'click', '.attachments-invoke', function( event ) {
-                        var options, attachment;
+                        var attachment;
 
                         event.preventDefault();
+
+                        existing = $element.find('.attachments-container > .attachments-attachment').length;
+                        if( limit > -1 && existing >= limit ){
+                            alert('<?php _e( "Currently limited to", "attachments" ); ?> ' + limit);
+                            return false;
+                        }
 
                         // if the frame already exists, open it
                         if ( attachmentsframe ) {
@@ -711,7 +777,7 @@ if ( !class_exists( 'Attachments' ) ) :
                             return;
                         }
 
-                        // set our seetings
+                        // set our settings
                         attachmentsframe = wp.media({
 
                             title: title,
@@ -732,9 +798,9 @@ if ( !class_exists( 'Attachments' ) ) :
                         });
 
                         // set up our select handler
-                        attachmentsframe.on( 'select', function() {
+                        attachmentsframe.on( 'select', function(){
 
-                            selection = attachmentsframe.state().get('selection');
+                            var selection = attachmentsframe.state().get('selection');
 
                             if ( ! selection )
                                 return;
@@ -749,6 +815,11 @@ if ( !class_exists( 'Attachments' ) ) :
 
                             // loop through the selected files
                             selection.each( function( attachment ) {
+
+                                // make sure we respect the limit
+                                if( limit > -1 && existing >= limit ){
+                                    return;
+                                }
 
                                 // set our attributes to the template
                                 attachment.attributes.attachment_uid = attachments_uniqid( 'attachmentsjs' );
@@ -773,6 +844,9 @@ if ( !class_exists( 'Attachments' ) ) :
 
                                 // append the template
                                 $element.find('.attachments-container').<?php if( $instance->append ) : ?>append<?php else : ?>prepend<?php endif; ?>(template(templateData));
+
+                                // update the number of existing Attachments
+                                existing = $element.find('.attachments-container > .attachments-attachment').length;
 
                                 // if we're in a sidebar we DO want to show the fields which are normally hidden on load via CSS
                                 if($element.parents('#side-sortables')){
@@ -806,6 +880,71 @@ if ( !class_exists( 'Attachments' ) ) :
                         attachmentsframe.content.mode(router);
 
                     });
+
+                    $element.on( 'click', '.edit-attachment-asset', function( event ) {
+
+                        event.preventDefault();
+
+                        var targetAttachment = $(event.target).parents(".attachments-attachment");
+
+                        if ( editframe ) {
+                            editframe.open();
+                            editframe.content.mode(router);
+                            return;
+                        }
+
+                        editframe = wp.media({
+                            title: title,
+                            multiple: false,
+                            library: {
+                                type: '<?php echo esc_attr( implode( ",", $instance->filetype ) ); ?>'
+                            },
+                            button: {
+                                text: '<?php _e( "Change", 'attachments' ); ?>'
+                            }
+                        });
+
+                        editframe.on( 'select', function(){
+
+                            var selection = editframe.state().get('selection');
+
+                            if ( ! selection )
+                                return;
+
+                            selection.each( function( attachment ) {
+
+                                // update the ID
+                                targetAttachment.find('input.attachments-track-id').val(attachment.id);
+
+                                // update the thumbnail
+                                var updatedThumb = false;
+                                if(attachments_isset(attachment.attributes)){
+                                    if(attachments_isset(attachment.attributes.sizes)){
+                                        if(attachments_isset(attachment.attributes.sizes.thumbnail)){
+                                            if(attachments_isset(attachment.attributes.sizes.thumbnail.url)){
+                                                updatedThumb = true;
+                                                targetAttachment.find('.attachment-thumbnail img').attr('src',attachment.attributes.sizes.thumbnail.url);
+                                            }
+                                        }
+                                    }
+                                }
+                                if( !updatedThumb ){
+                                    targetAttachment.find('.attachment-thumbnail img').attr('src','');
+                                }
+
+                                // update the name
+                                targetAttachment.find('.attachment-details .filename').text(attachment.attributes.filename);
+
+                                // update the dimensions
+                                if(attachments_isset(attachment.attributes.width)&&attachments_isset(attachment.attributes.height)){
+                                    targetAttachment.find('.attachment-details .dimensions').html(attachment.attributes.width + ' &times; ' + attachment.attributes.height).show();
+                                }
+
+                            } );
+                        });
+                        editframe.open();
+                        editframe.content.mode(router);
+                    } );
 
                     $element.on( 'click', '.delete-attachment a', function( event ) {
 
@@ -980,7 +1119,7 @@ if ( !class_exists( 'Attachments' ) ) :
                         ),
                         array(
                             'name'      => 'caption',                       // unique field name
-                            'type'      => 'wysiwyg',                      // registered field type
+                            'type'      => 'wysiwyg',                       // registered field type
                             'label'     => __( 'Caption', 'attachments' ),  // label to display
                             'default'   => 'caption',                       // default value upon selection
                         ),
@@ -1195,7 +1334,7 @@ if ( !class_exists( 'Attachments' ) ) :
                 <div class="attachments-attachment attachments-attachment-<?php echo $instance; ?>">
                     <?php $array_flag = ( isset( $attachment->uid ) ) ? $attachment->uid : '{{ attachments.attachment_uid }}'; ?>
 
-                    <input type="hidden" name="attachments[<?php echo $instance; ?>][<?php echo $array_flag; ?>][id]" value="<?php echo isset( $attachment->id ) ? $attachment->id : '{{ attachments.id }}' ; ?>" />
+                    <input type="hidden" class="attachments-track-id" name="attachments[<?php echo $instance; ?>][<?php echo $array_flag; ?>][id]" value="<?php echo isset( $attachment->id ) ? $attachment->id : '{{ attachments.id }}' ; ?>" />
 
                     <?php
                         // since attributes can change over time (image gets replaced, cropped, etc.) we'll pull that info
@@ -1232,6 +1371,7 @@ if ( !class_exists( 'Attachments' ) ) :
                             <?php if( ( isset( $attachment->id ) && isset( $attachment->width ) ) || !isset( $attachment->id ) ) : ?>
                                 <div class="dimensions"><?php echo isset( $attachment->width ) ? $attachment->width : '{{ attachments.width }}' ; ?> &times; <?php echo isset( $attachment->height ) ? $attachment->height : '{{ attachments.height }}' ; ?></div>
                             <?php endif; ?>
+                            <div class="edit-attachment-asset"><a href="#"><?php _e( 'Change', 'attachments' ); ?></a></div>
                             <div class="delete-attachment"><a href="#"><?php _e( 'Remove', 'attachments' ); ?></a></div>
                             <div class="attachments-attachment-fields-toggle"><a href="#"><?php _e( 'Toggle Fields', 'attachments' ); ?></a></div>
                         </div>
@@ -1372,6 +1512,26 @@ if ( !class_exists( 'Attachments' ) ) :
             // if the user deleted all Attachments we won't have our key
             $attachments_meta = isset( $_POST['attachments'] ) ? $_POST['attachments'] : array();
 
+            $this->save_metadata( $post_id, $attachments_meta );
+
+            return $post_id;
+        }
+
+
+
+        /**
+         * Processes submitted fields and saves Attachments' post metadata
+         *
+         * @param int $post_id The post ID
+         * @param array $attachments_meta Multidimenaional array containing Attachments data
+         * @return bool
+         * @since 3.4.3
+         */
+        function save_metadata( $post_id = 0, $attachments_meta = null )
+        {
+            if( !is_array( $attachments_meta ) || !is_int( $post_id ) || intval( $post_id ) < 1 )
+                return false;
+
             // final data store
             $attachments = array();
 
@@ -1381,36 +1541,41 @@ if ( !class_exists( 'Attachments' ) ) :
                 // loop through each Attachment of this instance
                 foreach( $instance_attachments as $key => $attachment )
                 {
-                    // since we're using JSON for storage in the database, we need
-                    // to make sure that characters are encoded that would otherwise
-                    // break the JSON
-                    if( isset( $attachment['fields'] ) && is_array( $attachment['fields'] ) )
+                    $attachment_exists = get_post( $attachment['id'] );
+                    // make sure the attachment exists
+                    if( $attachment_exists )
                     {
-
-                        foreach( $attachment['fields'] as $key => $field_value )
+                        // since we're using JSON for storage in the database, we need
+                        // to make sure that characters are encoded that would otherwise
+                        // break the JSON
+                        if( isset( $attachment['fields'] ) && is_array( $attachment['fields'] ) )
                         {
-                            // take care of our returns
-                            $field_value = str_replace( "\r\n", "\n", $field_value );
-                            $field_value = str_replace( "\r", "\n", $field_value );
 
-                            // we dont want to strip out our newlines so we're going to flag them
-                            $field_value = str_replace("\n", "%%ATTACHMENTS_NEWLINE%%", $field_value );
+                            foreach( $attachment['fields'] as $key => $field_value )
+                            {
+                                // take care of our returns
+                                $field_value = str_replace( "\r\n", "\n", $field_value );
+                                $field_value = str_replace( "\r", "\n", $field_value );
 
-                            // slashes were already added so we're going to strip them
-                            $field_value = stripslashes_deep( $field_value );
+                                // we don't want to strip out our newlines so we're going to flag them
+                                $field_value = str_replace("\n", "%%ATTACHMENTS_NEWLINE%%", $field_value );
 
-                            // put back our newlines
-                            $field_value = str_replace("%%ATTACHMENTS_NEWLINE%%", "\\n", $field_value );
+                                // slashes were already added so we're going to strip them
+                                $field_value = stripslashes_deep( $field_value );
 
-                            // encode the whole thing
-                            $field_value = $this->encode_field_value( $field_value );
+                                // put back our newlines
+                                $field_value = str_replace("%%ATTACHMENTS_NEWLINE%%", "\\n", $field_value );
 
-                            // encode things properly
-                            $attachment['fields'][$key] = $field_value;
+                                // encode the whole thing
+                                $field_value = $this->encode_field_value( $field_value );
+
+                                // encode things properly
+                                $attachment['fields'][$key] = $field_value;
+                            }
                         }
-                    }
 
-                    $attachments[$instance][] = $attachment;
+                        $attachments[$instance][] = $attachment;
+                    }
                 }
             }
 
@@ -1419,16 +1584,17 @@ if ( !class_exists( 'Attachments' ) ) :
                 // we're going to store JSON (JSON_UNESCAPED_UNICODE is PHP 5.4+)
                 $attachments = version_compare( PHP_VERSION, '5.4.0', '>=' ) ? json_encode( $attachments, JSON_UNESCAPED_UNICODE ) : json_encode( $attachments );
 
+                // fix potentially encoded Unicode
+                $attachments = str_replace( '\\', '\\\\', $attachments );
+
                 // we're going to wipe out any existing Attachments meta (because we'll put it back)
-                update_post_meta( $post_id, $this->meta_key, $attachments );
+                return update_post_meta( $post_id, $this->meta_key, $attachments );
             }
             else
             {
                 // there are no attachments so we'll clean up the record
-                delete_post_meta( $post_id, $this->meta_key );
+                return delete_post_meta( $post_id, $this->meta_key );
             }
-
-            return $post_id;
         }
 
 
@@ -1443,7 +1609,7 @@ if ( !class_exists( 'Attachments' ) ) :
         function encode_field_value( $field_value = null )
         {
             if( is_null( $field_value ) )
-                return;
+                return false;
 
             if( is_object( $field_value ) )
             {
@@ -1492,10 +1658,15 @@ if ( !class_exists( 'Attachments' ) ) :
             elseif( is_null( $instance ) )
             {
                 // return them all, regardless of instance
-                if( is_array( $attachments_raw ) && count( $attachments_raw ) )
+                if( ( is_array( $attachments_raw ) && count( $attachments_raw ) ) || is_object( $attachments_raw ) )
+                {
+                    // cast an object if necessary
+                    if( is_object( $attachments_raw ) ) $attachments_raw = (array) $attachments_raw;
+
                     foreach( $attachments_raw as $instance => $attachments_unprocessed )
                         foreach( $attachments_unprocessed as $unprocessed_attachment )
                             $attachments[] = $this->process_attachment( $unprocessed_attachment, $instance );
+                }
             }
 
             // tack on the post ID for each attachment
@@ -1567,7 +1738,8 @@ if ( !class_exists( 'Attachments' ) ) :
         /**
          * Processes Attachment (including fields) in preparation for return
          * @param  object $attachment An Attachment object as it was stored as post metadata
-         * @return object             Post-processed Attachment data
+         * @param string $instance The applicable instance
+         * @return object Post-processed Attachment data
          *
          * @since 3.3
          */
@@ -1625,7 +1797,7 @@ if ( !class_exists( 'Attachments' ) ) :
         function decode_field_value( $field_value = null )
         {
             if( is_null( $field_value ) )
-                return;
+                return false;
 
             if( is_object( $field_value ) )
             {
@@ -1645,115 +1817,6 @@ if ( !class_exists( 'Attachments' ) ) :
                 $field_value = html_entity_decode( $field_value, ENT_QUOTES, 'UTF-8' );
 
             return $field_value;
-        }
-
-
-
-        /**
-         * Determines whether or not there is 'active' legacy data the user may not know about
-         *
-         * @since 3.0
-         */
-        function has_outstanding_legacy_data()
-        {
-            if(
-               // migration has not taken place and we have legacy data
-               ( false == get_option( 'attachments_migrated' ) && !empty( $this->legacy ) )
-
-               &&
-
-               // we're not intentionally ignoring the message
-               ( false == get_option( 'attachments_ignore_migration' ) )
-            )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-
-
-        /**
-         * Outputs a WordPress message to notify user of legacy data
-         *
-         * @since 3.0
-         */
-        function admin_notice()
-        {
-
-            if( $this->has_outstanding_legacy_data() && ( isset( $_GET['page'] ) && $_GET['page'] !== 'attachments' || !isset( $_GET['page'] ) ) ) : ?>
-                <div class="message updated" id="message">
-                    <p><?php _e( '<strong>Attachments has detected legacy Attachments data.</strong> A lot has changed since Attachments 1.x.' ,'attachments' ); ?> <a href="options-general.php?page=attachments&amp;overview=1"><?php _e( 'Find out more', 'attachments' ); ?>.</a></p>
-                </div>
-            <?php endif;
-        }
-
-
-
-        /**
-         * Implements our WordPress pointer if necessary
-         *
-         * @since 3.0
-         */
-        function admin_pointer( $hook_suffix )
-        {
-
-            // Assume pointer shouldn't be shown
-            $enqueue_pointer_script_style = false;
-
-            // Get array list of dismissed pointers for current user and convert it to array
-            $dismissed_pointers = explode( ',', get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
-
-            // Check if our pointer is not among dismissed ones
-            if( $this->legacy && !in_array( 'attachments_legacy', $dismissed_pointers ) ) {
-                $enqueue_pointer_script_style = true;
-
-                // Add footer scripts using callback function
-                add_action( 'admin_print_footer_scripts', array( $this, 'pointer_legacy' ) );
-            }
-
-            // Enqueue pointer CSS and JS files, if needed
-            if( $enqueue_pointer_script_style ) {
-                wp_enqueue_style( 'wp-pointer' );
-                wp_enqueue_script( 'wp-pointer' );
-            }
-        }
-
-
-
-        /**
-         * Pointer that calls attention to legacy data
-         *
-         * @since 3.0
-         */
-        function pointer_legacy()
-        {
-            $pointer_content  = "<h3>". __( esc_html( 'Attachments 3.0 brings big changes!' ), 'attachments' ) ."</h3>";
-            $pointer_content .= "<p>". __( esc_html( 'It is very important that you take a few minutes to see what has been updated. The changes will affect your themes/plugins.' ), 'attachments' ) ."</p>";
-            ?>
-
-            <script type="text/javascript">
-            jQuery(document).ready( function($) {
-                $('#message a').pointer({
-                    content:'<?php echo $pointer_content; ?>',
-                    position:{
-                        edge:'top',
-                        align:'center'
-                    },
-                    pointerWidth:350,
-                    close:function() {
-                        $.post( ajaxurl, {
-                            pointer: 'attachments_legacy',
-                            action: 'dismiss-wp-pointer'
-                        });
-                    }
-                }).pointer('open');
-            });
-            </script>
-            <?php
         }
 
 

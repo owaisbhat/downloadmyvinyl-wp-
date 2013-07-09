@@ -149,7 +149,7 @@ class UMM_UI extends WP_List_Table {
         umm_update_option('settings', $settings);
       endif;
     ?>
-<div class="umm-wrapper" data-help_text="<?php _e('User Meta Manager Help &amp; Settings', 'user-meta-manager') ?>" data-umm_loading_image="<?php echo WP_PLUGIN_URL . "/user-meta-manager/images/umm-loading.gif" ?>" data-first_run="<?php echo $first_run ?>" data-no_spaces="<?php _e('No Spaces', 'user-meta-manager') ?>" data-invalid_chars_warning="<?php _e('Letters, numbers, and underscores only.', 'user-meta-manager') ?>" data-key_exists="<?php _e('<strong>Error:</strong> That key already exists. Choose a different name.', 'user-meta-manager') ?>">
+<div class="umm-wrapper" data-help_text="<?php _e('User Meta Manager Help &amp; Settings', 'user-meta-manager') ?>" data-umm_loading_image="<?php echo WP_PLUGIN_URL . "/user-meta-manager/images/umm-loading.gif" ?>" data-first_run="<?php echo $first_run ?>" data-no_spaces="<?php _e('No Spaces', 'user-meta-manager') ?>" data-invalid_chars_warning="<?php _e('Letters, numbers, and underscores only.', 'user-meta-manager') ?>" data-key_exists="<?php _e('<strong>Error:</strong> That key already exists. Choose a different name.', 'user-meta-manager') ?>" data-duplicate_override="<?php echo $settings['duplicate_check_override'];  ?>">
 <div id="icon-users" class="icon32"><br/></div><!-- #icon-users .icon32 -->
 <h2 class="umm-plugin-title"><?php _e('User Meta Manager', 'user-meta-manager') ?></h2><!-- .umm-plugin-title -->
 <div class="umm-slogan"><?php _e('Manage User Meta Data', 'user-meta-manager') ?></div><!-- .umm-slogan -->     
@@ -168,10 +168,10 @@ class UMM_UI extends WP_List_Table {
   <div class="umm-subpage-wrapper">
     <div class="umm-subpage-loading hidden"><img class="umm-loading" src="<?php echo WP_PLUGIN_URL . "/user-meta-manager/images/umm-loading.gif" ?>" alt="..." /></div><!-- .umm-subpage-loading -->      
     <div class="umm-subpage hidden"></div><!-- .umm-subpage -->
-    <div class="umm-per-page-menu hidden"><strong><?php _e('Items Per Page', 'user-meta-manager') ?>:</strong> <input type="text" id="per-page" size="4" value="<?php echo $per_page ?>" /><input class="umm-go button-secondary action" type="submit" value="<?php _e('Go', 'user-meta-manager') ?>" /></div><!-- .umm-per-page-menu -->
+    <div class="umm-per-page-menu hidden"><strong><?php _e('Items Per Page', 'user-meta-manager') ?>:</strong> <input type="text" id="per-page" name="per_page" size="4" value="<?php echo $per_page ?>" /><input class="umm-go button-secondary action" type="submit" value="<?php _e('Go', 'user-meta-manager') ?>" /></div><!-- .umm-per-page-menu -->
     <div id="umm-home">
       <div class="umm-search-mode-menu hidden"> <?php $this->get_search_menu(); ?></div><!-- .umm-search-mode-menu -->
-      <form id="umm-form" method="get">
+      <form id="umm-form" method="GET">
         <input class="umm-mode" type="hidden" name="umm_mode" value="<?php echo $_REQUEST['umm_mode'] ?>" />
         <input type="hidden" name="page" value="<?php echo $_REQUEST['page'] ?>" />
         <input type="hidden" name="paged" value="<?php echo $_REQUEST['paged'] ?>" />
