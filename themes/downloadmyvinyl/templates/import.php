@@ -7,11 +7,11 @@
 <?php get_header(); ?>
 
 <?php
-set_time_limit(11200);
-$db=db_connect('downloadmyvinyl-wp');
+	set_time_limit(11200);
+	$db=db_connect('downloadmyvinyl-wp');
 
-delete_data();
-import_data();
+	delete_data();
+	import_data();
 ?>
 
 

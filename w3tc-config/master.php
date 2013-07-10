@@ -1,7 +1,7 @@
 <?php
 
 return array(
-	'version' => '0.9.2.8',
+	'version' => '0.9.2.11',
 	'cluster.messagebus.debug' => false,
 	'cluster.messagebus.enabled' => false,
 	'cluster.messagebus.sns.region' => '',
@@ -391,6 +391,7 @@ return array(
 	'varnish.enabled' => false,
 	'varnish.debug' => false,
 	'varnish.servers' => array(
+		0 => '',
 	),
 	'browsercache.enabled' => true,
 	'browsercache.no404wp' => false,
@@ -616,7 +617,6 @@ return array(
 	'widget.pagespeed.key' => '',
 	'notes.wp_content_changed_perms' => true,
 	'notes.wp_content_perms' => true,
-	'notes.php_is_old' => true,
 	'notes.theme_changed' => false,
 	'notes.wp_upgraded' => false,
 	'notes.plugins_updated' => false,
@@ -628,7 +628,7 @@ return array(
 	'notes.root_rules' => true,
 	'notes.rules' => true,
 	'notes.pgcache_rules_wpsc' => true,
-	'notes.support_us' => true,
+	'notes.support_us' => false,
 	'notes.no_curl' => true,
 	'notes.no_zlib' => true,
 	'notes.zlib_output_compression' => true,
@@ -666,4 +666,5 @@ return array(
 	'newrelic.cache_time' => 5,
 	'newrelic.enable_xmit' => false,
 	'newrelic.use_network_wide_id' => false,
+	'pgcache.late_init' => false,
 );

@@ -43,9 +43,6 @@ Template: Avada
 .home .section .gform_wrapper form .gform_heading .gform_title {
   display: none;
 }
-.home .section .gform_wrapper form .gform_body ul li label {
-  margin-top: 0;
-}
 .home .section .gform_wrapper form .gform_body .gfield_required {
   display: none;
 }
