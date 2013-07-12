@@ -162,7 +162,7 @@ function import_codes() {
 			$args['post_status'] = 'expired';
 		}
 
-		$query =  "INSERT INTO codes ( code, record_id, count, expired, downloaded, created ) VALUES ( '{$args['code']}', '{$args['record_id']}', '{$args['count']}', '{$args['expired']}', '{$args['downloaded']}', '{$args['created']}' ) ";
+		$query =  "INSERT INTO codes ( code, record_id, count, expired, downloaded, created ) VALUES ( '{$args['code']}', '$record_id', '{$args['count']}', '{$args['expired']}', '{$args['downloaded']}', '{$args['created']}' ) ";
 		fwrite( $file_handle, "INSERT INTO codes ( code, record_id, count, expired, downloaded, created ) VALUES ( '{$args['code']}', '{$args['record_id']}', '{$args['count']}', '{$args['expired']}', '{$args['downloaded']}', '{$args['created']}' ) \n");
 		mysql_query ( $query );
 	}

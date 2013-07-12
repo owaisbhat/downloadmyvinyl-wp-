@@ -1,4 +1,6 @@
 <?php
+
+include_once( get_stylesheet_directory() . '/functions/enqueues.php' );
 include_once( get_stylesheet_directory() . '/functions/posttypes_and_taxonomies.php' );
 include_once( get_stylesheet_directory() . '/functions/add_fields_to_formats.php' );
 include_once( get_stylesheet_directory() . '/functions/import.php' );

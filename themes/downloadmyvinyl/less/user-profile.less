@@ -1,7 +1,18 @@
 .author {
-#main {
-		h1 {
-			font-size: 40px;
+	section.user-profile {
+		.profile-header {
+			padding-bottom: 10px;
+			border-bottom: 1px solid @grayLighter;
+
+			h1 {
+				font-size: 40px;
+				display: inline;
+			}
+				
+			.edit-profile {
+				margin-left: 10px;
+				font-size: 12px;
+			}
 		}
 		 h2 {
 			font-size: 14px;
@@ -13,6 +24,37 @@
 
 			.record {
 				margin-bottom: 30px;		
+				padding: 10px 0;
+				border-radius: 5px;
+				min-height: 220px;
+				background-color: @grayLightest;
+				position: relative;
+
+				&:hover {
+					background-color: darken( @grayLightest, 3% );
+					cursor: pointer;
+				}
+
+				.record-info {
+					.band {
+						font-size: 15px;
+						font-weight: bold;
+					}
+
+					.record-title {
+						color: @grayLight;
+					}
+				}
+
+				.record-admin {
+					position: absolute;
+					bottom: 5px;
+					left: 48px;
+					
+					a {
+						color: @grayLight;
+					}
+				}
 			}
 		}
 	}

@@ -16,18 +16,18 @@
 	}
 
 	function get_code_count( $record_id ) {
-		$args = array (
-			'post_type' => 'code',
-			'post_status' => 'any',
-			'connected_type' => 'record_to_code',
-			'connected_items' => $record_id,
-			'surpress_filters' => false,
-			'nopaging' => true,
-		);
+		$result = mysql_query( "SELECT COUNT( id ) FROM codes WHERE record_id = $record_id" );
+		$row = mysql_fetch_row( $result );
 
-		$query = new WP_Query( $args );
+		return number_format( $row[0] );
 
-		return number_format( $query->post_count );
+	}
+
+	function get_used_count ( $record_id ) {
+		$result = mysql_query( "SELECT COUNT( id ) FROM codes WHERE record_id = $record_id AND expired = 1" );
+		$row = mysql_fetch_row( $result );
+
+		return number_format( $row[0] );
 	}
 
 ?>

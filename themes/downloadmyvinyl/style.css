@@ -14,42 +14,76 @@ Template: Avada
   position: absolute;
   left: 130px;
 }
-.author #main h1 {
-  font-size: 40px;
+.author section.user-profile .profile-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #cecece;
 }
-.author #main h2 {
+.author section.user-profile .profile-header h1 {
+  font-size: 40px;
+  display: inline;
+}
+.author section.user-profile .profile-header .edit-profile {
+  margin-left: 10px;
+  font-size: 12px;
+}
+.author section.user-profile h2 {
   font-size: 14px;
 }
-.author #main .records {
+.author section.user-profile .records {
   margin-top: 20px;
   text-align: center;
 }
-.author #main .records .record {
+.author section.user-profile .records .record {
   margin-bottom: 30px;
+  padding: 10px 0;
+  border-radius: 5px;
+  min-height: 220px;
+  background-color: #f7f7f7;
+  position: relative;
+}
+.author section.user-profile .records .record:hover {
+  background-color: #efefef;
+  cursor: pointer;
+}
+.author section.user-profile .records .record .record-info .band {
+  font-size: 15px;
+  font-weight: bold;
+}
+.author section.user-profile .records .record .record-info .record-title {
+  color: #b4b4b4;
+}
+.author section.user-profile .records .record .record-admin {
+  position: absolute;
+  bottom: 5px;
+  left: 48px;
+}
+.author section.user-profile .records .record .record-admin a {
+  color: #b4b4b4;
 }
 .home .section {
   margin-bottom: 30px;
   border-bottom: 1px solid #eee;
+  min-height: 200px;
 }
 .home .section:last-child {
   border: none;
 }
-.home .section .gform_wrapper {
+.home .gform_wrapper {
   margin-top: 0;
 }
-.home .section .gform_wrapper form .gform_heading {
+.home .gform_wrapper form .gform_heading {
   margin: 0;
 }
-.home .section .gform_wrapper form .gform_heading .gform_title {
+.home .gform_wrapper form .gform_heading .gform_title {
   display: none;
 }
-.home .section .gform_wrapper form .gform_body ul li label {
+.home .gform_wrapper form .gform_body ul li label {
   margin-top: 0;
 }
-.home .section .gform_wrapper form .gform_body .gfield_required {
+.home .gform_wrapper form .gform_body .gfield_required {
   display: none;
 }
-.home .section .gform_wrapper form .gform_body input[type=text] {
+.home .gform_wrapper form .gform_body input[type=text] {
   background-color: #fef3e0;
   border: 1px solid #ccc;
   font-size: 24px;
@@ -57,8 +91,4 @@ Template: Avada
   color: #a64a08;
   width: 320px;
   height: 26px;
-}
-.home .section .gform_wrapper form .gform_body input[type=submit] {
-  /*.btn;*/
-
 }
