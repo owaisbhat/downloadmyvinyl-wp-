@@ -1,3 +1,4 @@
+.page-template-templatesdownload-php,
 .home {
 	.section {
 		margin-bottom: 30px;
@@ -7,53 +8,46 @@
 		&:last-child {
 			border: none;
 		}
+
+		&.code-section {
+			text-align: center;
+		}
 	}
 
+	.code-text {
+		font-size: 18px;
+		margin-bottom: 10px;
+	}
 
-	
+	.error {
+		padding: 10px 20px;
+		margin-bottom: 20px;
+		width: auto;
+		background-color: #fcf2f2;
+		border: 1px solid #dFb5b4;;
+		border-left: 5px solid #dFb5b4;
+		border-color: #dFb5b4;
+	}
 
+	//FORMS
 
+form {
+	text-align: center;
 
+		input[type=text] {
+			background-color: #fef3e0;
+			border: 1px solid #ccc;
+			font-size: 24px;
+			text-align: center;
+			color: #a64a08;
+			width: 350px;
+			height: 35px;
+			letter-spacing: 3px;
+			text-transform: lowercase;
+		}
 
-
-
-//FORMS
-	.gform_wrapper {
-		margin-top: 0;
-
-		form {
-			.gform_heading {
-
-				margin: 0;
-				.gform_title {
-					display: none;
-				}
-			}
-			.gform_body {
-				ul {
-					li {
-						label {
-							margin-top: 0;
-						}
-					}
-				}
-				.gfield_required {
-					display: none;
-				}
-
-				input[type=text] {
-					background-color: #fef3e0;
-					border: 1px solid #ccc;
-					font-size: 24px;
-					text-align: center;
-					color: #a64a08;
-					width: 320px;
-					height: 26px;
-				}
-
-				input[type=submit] {
-				}
-			}
+		.submit {
+			margin-top: 15px;
 		}
 	}
 }

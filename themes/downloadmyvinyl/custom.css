@@ -14,48 +14,81 @@ Template: Avada
   position: absolute;
   left: 130px;
 }
-.author #main h1 {
-  font-size: 40px;
+.author section.user-profile .profile-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dddddd;
 }
-.author #main h2 {
+.author section.user-profile .profile-header h1 {
+  font-size: 40px;
+  display: inline;
+}
+.author section.user-profile .profile-header .edit-profile {
+  margin-left: 10px;
+  font-size: 12px;
+}
+.author section.user-profile h2 {
   font-size: 14px;
 }
-.author #main .records {
+.author section.user-profile .records {
   margin-top: 20px;
   text-align: center;
 }
-.author #main .records .record {
+.author section.user-profile .records .record {
   margin-bottom: 30px;
+  padding: 10px 0;
+  border-radius: 5px;
+  min-height: 220px;
+  background-color: #f5f5f5;
+  position: relative;
+}
+.author section.user-profile .records .record:hover {
+  background-color: #ededed;
+  cursor: pointer;
+}
+.author section.user-profile .records .record .record-info .band {
+  font-size: 15px;
+  font-weight: bold;
+}
+.author section.user-profile .records .record .record-info .record-title {
+  color: #999999;
+}
+.author section.user-profile .records .record .record-admin {
+  position: absolute;
+  bottom: 5px;
+  left: 48px;
+}
+.author section.user-profile .records .record .record-admin a {
+  color: #999999;
 }
 .home .section {
   margin-bottom: 30px;
   border-bottom: 1px solid #eee;
+  min-height: 200px;
 }
 .home .section:last-child {
   border: none;
 }
-.home .section .gform_wrapper {
-  margin-top: 0;
+.home .section.code-section {
+  text-align: center;
 }
-.home .section .gform_wrapper form .gform_heading {
-  margin: 0;
+.home .code-text {
+  font-size: 18px;
+  margin-bottom: 10px;
 }
-.home .section .gform_wrapper form .gform_heading .gform_title {
-  display: none;
+.home form {
+  text-align: center;
 }
-.home .section .gform_wrapper form .gform_body .gfield_required {
-  display: none;
-}
-.home .section .gform_wrapper form .gform_body input[type=text] {
+.home form input[type=text] {
   background-color: #fef3e0;
   border: 1px solid #ccc;
   font-size: 24px;
   text-align: center;
   color: #a64a08;
-  width: 320px;
-  height: 26px;
+  width: 350px;
+  height: 35px;
+  letter-spacing: 3px;
+  text-transform: lowercase;
 }
-.home .section .gform_wrapper form .gform_body input[type=submit] {
-  /*.btn;*/
-
+.home form .submit {
+  margin-top: 15px;
 }

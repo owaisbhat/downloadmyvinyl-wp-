@@ -8,7 +8,7 @@
 
 <div class="container">
 	<div class="row">
-		<div class="span12">
+		<div class="col-lg-12">
 
 			<?php get_template_part( 'template-parts/home/home', 'code-form' ); ?>
 

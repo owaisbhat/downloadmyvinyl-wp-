@@ -4,8 +4,8 @@ Contributors: Jason Lau
 Donate link: http://jasonlau.biz
 Tags: user, users, meta, usermeta, wp_usermeta, data, table, database, edit, add, update, delete, save, saved, list, manage, manager, management, customize, custom, create, activate, register, registers, short, tag, short code, member, members, admin, administrate, administrator, administrative, tool, plugin, module, addon, jason, lau, jasonlau, jasonlau.biz, profile, field, fields, extra
 Requires at least: 3.3.1
-Stable tag: 2.2.8
-Tested up to: 3.5.1
+Stable tag: 3.0.0
+Tested up to: 3.5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,12 @@ Yes I do. Check my website at JasonLau.biz.
 1. screenshot-1.png The User Meta Manager Home screen.
 
 == Changelog ==
+
+= 3.0.0 =
+Bug fix. Fixed a bug which caused default html markup to not be set.
+
+= 2.2.9 =
+You can now change the HTML markup for the custom field output. Look in the User Meta Manager contextual help tab under Plugin Settings for new options.
 
 = 2.2.8 =
 Custom profile fields are now automatically added to the user registration form and the Add New User form. Confirmed compatibility with WordPress version 3.5.2. Fixed a pagination bug. Added a couple of PHP API methods for testing meta data.
@@ -311,3 +317,9 @@ New feature allows you to change the name of the hidden form-field used to test 
 
 = 2.2.8 =
 Custom profile fields are now automatically added to the user registration form and the Add New User form. Confirmed compatibility with WordPress version 3.5.2. Fixed a pagination bug. Added a couple of PHP API methods for testing meta data.
+
+= 2.2.9 =
+You can now change the HTML markup for the custom field output. Look in the User Meta Manager contextual help tab under Plugin Settings for new options.
+
+= 3.0.0 =
+Bug fix. Fixed a bug which caused default html markup to not be set.

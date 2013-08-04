@@ -16,7 +16,7 @@ Template: Avada
 }
 .author section.user-profile .profile-header {
   padding-bottom: 10px;
-  border-bottom: 1px solid #cecece;
+  border-bottom: 1px solid #dddddd;
 }
 .author section.user-profile .profile-header h1 {
   font-size: 40px;
@@ -38,11 +38,11 @@ Template: Avada
   padding: 10px 0;
   border-radius: 5px;
   min-height: 220px;
-  background-color: #f7f7f7;
+  background-color: #f5f5f5;
   position: relative;
 }
 .author section.user-profile .records .record:hover {
-  background-color: #efefef;
+  background-color: #ededed;
   cursor: pointer;
 }
 .author section.user-profile .records .record .record-info .band {
@@ -50,7 +50,7 @@ Template: Avada
   font-weight: bold;
 }
 .author section.user-profile .records .record .record-info .record-title {
-  color: #b4b4b4;
+  color: #999999;
 }
 .author section.user-profile .records .record .record-admin {
   position: absolute;
@@ -58,37 +58,54 @@ Template: Avada
   left: 48px;
 }
 .author section.user-profile .records .record .record-admin a {
-  color: #b4b4b4;
+  color: #999999;
 }
+.page-template-templatesdownload-php .section,
 .home .section {
   margin-bottom: 30px;
   border-bottom: 1px solid #eee;
   min-height: 200px;
 }
+.page-template-templatesdownload-php .section:last-child,
 .home .section:last-child {
   border: none;
 }
-.home .gform_wrapper {
-  margin-top: 0;
+.page-template-templatesdownload-php .section.code-section,
+.home .section.code-section {
+  text-align: center;
 }
-.home .gform_wrapper form .gform_heading {
-  margin: 0;
+.page-template-templatesdownload-php .code-text,
+.home .code-text {
+  font-size: 18px;
+  margin-bottom: 10px;
 }
-.home .gform_wrapper form .gform_heading .gform_title {
-  display: none;
+.page-template-templatesdownload-php .error,
+.home .error {
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  width: auto;
+  background-color: #fcf2f2;
+  border: 1px solid #dFb5b4;
+  border-left: 5px solid #dFb5b4;
+  border-color: #dFb5b4;
 }
-.home .gform_wrapper form .gform_body ul li label {
-  margin-top: 0;
+.page-template-templatesdownload-php form,
+.home form {
+  text-align: center;
 }
-.home .gform_wrapper form .gform_body .gfield_required {
-  display: none;
-}
-.home .gform_wrapper form .gform_body input[type=text] {
+.page-template-templatesdownload-php form input[type=text],
+.home form input[type=text] {
   background-color: #fef3e0;
   border: 1px solid #ccc;
   font-size: 24px;
   text-align: center;
   color: #a64a08;
-  width: 320px;
-  height: 26px;
+  width: 350px;
+  height: 35px;
+  letter-spacing: 3px;
+  text-transform: lowercase;
+}
+.page-template-templatesdownload-php form .submit,
+.home form .submit {
+  margin-top: 15px;
 }
